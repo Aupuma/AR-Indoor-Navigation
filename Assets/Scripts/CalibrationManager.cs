@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
@@ -24,6 +25,9 @@ public class CalibrationManager : MonoBehaviour
     public GameObject scene;
     public GameObject calibrationCanvas;
     bool isCalibrating = false;
+    public NavMeshSurface surface;
+
+
 
     //void OnEnable()
     //{
@@ -69,32 +73,35 @@ public class CalibrationManager : MonoBehaviour
 
     public void Calibrate()
     {
-        CalibrateRotation(targetTransform, childTransform);
-        CalibratePosition(targetTransform, childTransform);
+        CalibrateRotation(targetTransform, childTransform,scene.transform);
+        CalibratePosition(targetTransform, childTransform,scene.transform);
         scene.SetActive(true);
+        surface.BuildNavMesh();
         //calibrationCanvas.SetActive(false);
     }
 
-    public void CalibratePosition(Transform targetTransform, Transform childTransform)
+    public void CalibratePosition(Transform realMarker, Transform virtualMarker, Transform level)
     {
-        Vector3 differenceVector = targetTransform.position - childTransform.position;
-        childTransform.parent.position = new Vector3(childTransform.parent.position.x + differenceVector.x, childTransform.parent.position.y + differenceVector.y, childTransform.parent.position.z + differenceVector.z);
+        Vector3 differenceVector = realMarker.position - virtualMarker.position;
+        level.position = new Vector3(level.position.x + differenceVector.x, 
+            level.position.y + differenceVector.y, 
+            level.position.z + differenceVector.z);
     }
 
-    public void CalibrateRotation(Transform targetTransform, Transform childTransform)
+    public void CalibrateRotation(Transform realMarker, Transform virtualMarker, Transform level)
     {
         //APPLYING CORRECT ROTATION METHODS------------------------------------------------------
         // Populate the net rotation that you want the child to have.
-        Quaternion desiredRotation = Quaternion.LookRotation(targetTransform.forward, Vector3.up);
+        Quaternion desiredRotation = Quaternion.LookRotation(realMarker.forward, Vector3.up);
 
         // Create a rotation that undoes the child's rotation, then applies the desired rotation.
-        Quaternion rotationCorrection = desiredRotation * Quaternion.Inverse(childTransform.localRotation);
+        Quaternion rotationCorrection = desiredRotation * Quaternion.Inverse(virtualMarker.localRotation);
 
         // The parent will apply this correction to its child transforms.
         Vector3 convertedCorrection = Quaternion.ToEulerAngles(rotationCorrection);
 
         //The object will only change its yaw
-        childTransform.parent.eulerAngles = new Vector3(0, convertedCorrection.y * Mathf.Rad2Deg, 0);
+        level.eulerAngles = new Vector3(0, convertedCorrection.y * Mathf.Rad2Deg, 0);
         //----------------------------------------------------------------------------------------
     }
 }
