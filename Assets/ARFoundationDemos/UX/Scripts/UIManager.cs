@@ -5,17 +5,17 @@ using UnityEngine.XR.ARFoundation;
 
 public struct UXHandle
 {
-    public UIManager.InstructionUI InstructionalUI;
-    public UIManager.InstructionGoals Goal;
+    public GUIManager.InstructionUI InstructionalUI;
+    public GUIManager.InstructionGoals Goal;
 
-    public UXHandle(UIManager.InstructionUI ui, UIManager.InstructionGoals goal)
+    public UXHandle(GUIManager.InstructionUI ui, GUIManager.InstructionGoals goal)
     {
         InstructionalUI = ui;
         Goal = goal;
     }
 }
 
-public class UIManager : MonoBehaviour
+public class GUIManager : MonoBehaviour
 {
     [SerializeField]
     bool m_StartWithInstructionalUI = true;

@@ -26,7 +26,7 @@ public class CalibrationManager : MonoBehaviour
     public GameObject calibrationCanvas;
     bool isCalibrating = false;
     public NavMeshSurface surface;
-
+    public NavigationManager navigationManager;
 
 
     //void OnEnable()
@@ -77,6 +77,7 @@ public class CalibrationManager : MonoBehaviour
         CalibratePosition(targetTransform, childTransform,scene.transform);
         scene.SetActive(true);
         surface.BuildNavMesh();
+        navigationManager.StartNavigation();
         //calibrationCanvas.SetActive(false);
     }
 
