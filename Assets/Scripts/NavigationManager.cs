@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
@@ -10,82 +11,103 @@ public class NavigationManager : MonoBehaviour
     private NavMeshPath path; // current calculated path
     public LineRenderer line; // linerenderer to display path
     public Transform target; // current chosen destination
-    private bool navigationReady = false; // bool to say if a destination is set
 
-
-    public Transform arCamera;
-    private Vector3 lastArCameraPosition;
-
+    public Camera arCamera;
     public Transform personIndicator;
     public PositionConstraint personPositionConstraint;
 
     public Camera topDownCamera;
     public NavMeshSurface navMeshSurface;
 
-    bool isSettingDestination = true;
-
     private Vector3 currentDestination;
+
+    float pressingTimer = 0f;
+    public float maxPressingTime = 0.5f;
+
+    bool isDestinationSet = false;
 
     //create initial path, get linerenderer.
     void Start()
     {
         path = new NavMeshPath();
-        navigationReady = false;
-        lastArCameraPosition = Vector3.zero;
+        line.enabled = false;
     }
 
     public void StartNavigation()
     {
-        Vector3 personStartPosition = new Vector3(arCamera.position.x, personIndicator.position.y, arCamera.position.z);
-        personIndicator.position = personStartPosition;
+        personIndicator.position = new Vector3(arCamera.transform.position.x, personIndicator.position.y, arCamera.transform.position.z);
         personPositionConstraint.constraintActive = true;
-        isSettingDestination = true;
     }
 
     void Update()
     {
-        if (isSettingDestination)
+
+        if (Input.GetMouseButton(0))
         {
-            if (Input.GetMouseButtonDown(0))
+            if (pressingTimer < maxPressingTime)
+            {
+                pressingTimer += Time.deltaTime;
+            }
+            else
             {
                 SetDestination(Input.mousePosition);
+                pressingTimer = 0f;
             }
+        }
+        if (Input.GetMouseButtonUp(0))
+        {
+            pressingTimer = 0f;
         }
 
-        //if a target is set, calculate and update path
-        if (navigationReady)
+        if (isDestinationSet)
         {
-            NavMesh.CalculatePath(personIndicator.position, currentDestination, NavMesh.AllAreas, path);
-            //lost path due to standing above obstacle (drift)
-            if (path.corners.Length == 0)
-            {
-                Debug.Log("Try moving away for obstacles (optionally recalibrate)");
-            }
-            line.positionCount = path.corners.Length;
-            line.SetPositions(path.corners);
-            line.enabled = true;
-            
+            CalculatePath();
+            //CheckIfDestinationReached();
         }
+
     }
 
+    private void CheckIfDestinationReached()
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Checks if point pressed on the screen is available as destination in the map
+    /// </summary>
+    /// <param name="mousePosition"></param>
     public void SetDestination(Vector2 mousePosition)
     {
-        Vector2 rayVector = new Vector2(mousePosition.x, mousePosition.y);
-        Vector2 rayVectorTransformed = arCamera.GetComponent<Camera>().ScreenToViewportPoint(rayVector);
-
-        Ray camRay = topDownCamera.ViewportPointToRay(rayVectorTransformed);
+        Vector2 rayVector = arCamera.GetComponent<Camera>().ScreenToViewportPoint(mousePosition);
+        Ray camRay = topDownCamera.ViewportPointToRay(rayVector);
         RaycastHit hitInfo;
         int layer_mask = LayerMask.GetMask("floor");
 
-        Debug.DrawRay(camRay.origin, camRay.direction, Color.red, 5f);
         if(Physics.Raycast(camRay, out hitInfo, layer_mask))
         {
             NavMeshHit navMeshHit;
             if(NavMesh.SamplePosition(hitInfo.point, out navMeshHit, 0.5f, NavMesh.AllAreas))
             {
                 currentDestination = navMeshHit.position;
-                navigationReady = true;
+                line.enabled = true;
+                isDestinationSet = true;
             }
         }
+    }
+
+    /// <summary>
+    /// Draws the path both in AR and in the map
+    /// </summary>
+    private void CalculatePath()
+    {
+        NavMesh.CalculatePath(personIndicator.position, currentDestination, NavMesh.AllAreas, path);
+        //lost path due to standing above obstacle (drift)
+        if (path.corners.Length == 0)
+        {
+            Debug.Log("Try moving away for obstacles (optionally recalibrate)");
+        }
+        line.positionCount = path.corners.Length;
+        line.SetPositions(path.corners);
+        //line.enabled = true;
     }
 }
