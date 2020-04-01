@@ -1,78 +1,99 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
 public class CalibrationManager : MonoBehaviour
 {
-    [SerializeField]
-    [Tooltip("Image manager on the AR Session Origin")]
-    ARTrackedImageManager m_ImageManager;
+    [Header("Image related references")]
+    public ARTrackedImageManager imageManager;
+    public XRReferenceImageLibrary trackedImagesLibrary;
+    static Guid[] trackedImagesIdentifiers;
+    public Transform[] virtualImagesTrs;
 
-    /// <summary>
-    /// Get the <c>ARTrackedImageManager</c>
-    /// </summary>
-    public ARTrackedImageManager ImageManager
-    {
-        get => m_ImageManager;
-        set => m_ImageManager = value;
-    }
-
-    public Transform targetTransform;
-    public Transform childTransform;
-    public GameObject scene;
-    public GameObject calibrationCanvas;
-    bool isCalibrating = false;
-    public NavMeshSurface surface;
+    [Header("Other references")]
+    public GameObject levelObject;
     public NavigationManager navigationManager;
+    public Button calibrateButton;
 
+    [Header("Calibration parameters")]
+    bool isCalibrationReady = false;
+    bool isCalibrating = false;
+    public float calibrationDuration = 2f;
+    float calibrationTimer = 0.0f;
 
     void OnEnable()
     {
-        m_ImageManager.trackedImagesChanged += ImageManagerOnTrackedImagesChanged;
+        calibrateButton.onClick.AddListener(SetCalibrationReady);
+
+        trackedImagesIdentifiers = new Guid[trackedImagesLibrary.count];
+        for (int i = 0; i < trackedImagesLibrary.count; i++)
+        {
+            trackedImagesIdentifiers[i] = trackedImagesLibrary[i].guid;
+        }
+
+        imageManager.trackedImagesChanged += ImageManagerOnTrackedImagesChanged;
     }
 
     void OnDisable()
     {
-        m_ImageManager.trackedImagesChanged -= ImageManagerOnTrackedImagesChanged;
+        imageManager.trackedImagesChanged -= ImageManagerOnTrackedImagesChanged;
     }
 
+    private void Update()
+    {
+        if (isCalibrating)
+        {
+            calibrationTimer += Time.deltaTime;
+            if(calibrationTimer >= calibrationDuration)
+            {
+                calibrationTimer = 0f;
+                FinishCalibration();
+            }
+        }
+    }
+
+    private void SetCalibrationReady()
+    {
+        isCalibrationReady = true;
+        calibrateButton.interactable = false;
+    }
 
     void ImageManagerOnTrackedImagesChanged(ARTrackedImagesChangedEventArgs obj)
     {
-        if (!isCalibrating) return;
-        else
+        if (obj.updated.Count > 0 && isCalibrationReady)
         {
-            foreach (ARTrackedImage image in obj.updated)
+            isCalibrating = true;
+            isCalibrationReady = false;
+        }
+        else if(obj.updated.Count > 0 && isCalibrating)
+        {
+            ARTrackedImage trackedImg = obj.updated[0];
+            if (trackedImg.trackingState == TrackingState.Tracking)
             {
-                // image is tracking or tracking with limited state, show visuals and update it's position and rotation
-                if (image.trackingState == TrackingState.Tracking)
+                int imgIndex = -1;
+
+                for (int i = 0; i < trackedImagesIdentifiers.Length; i++)
                 {
-                    isCalibrating = false;
-                    CalibratePosition(image.transform, childTransform, scene.transform);
-                    CalibrateRotation(image.transform, childTransform, scene.transform);
-                    Calibrate();
+                    if (trackedImg.referenceImage.guid == trackedImagesIdentifiers[i])
+                        imgIndex = i;
                 }
+
+                if (imgIndex == -1) return;
+
+                Calibrate(trackedImg.transform, virtualImagesTrs[imgIndex]);
             }
         }
-
-
     }
 
-    public void TryCalibration()
+    public void Calibrate(Transform realTransform, Transform virtualTransform)
     {
-        isCalibrating = true;
-    }
-
-    public void Calibrate()
-    {
-        //CalibrateRotation(targetTransform, childTransform,scene.transform);
-        //CalibratePosition(targetTransform, childTransform,scene.transform);
-        scene.SetActive(true);
-        surface.BuildNavMesh();
-        navigationManager.StartNavigation();
+        CalibrateRotation(realTransform, virtualTransform, levelObject.transform);
+        CalibratePosition(realTransform, virtualTransform, levelObject.transform);
     }
 
     public void CalibratePosition(Transform realMarker, Transform virtualMarker, Transform level)
@@ -94,5 +115,13 @@ public class CalibrationManager : MonoBehaviour
 
         //The object will only change its yaw
         level.eulerAngles = new Vector3(0, convertedCorrection.y, 0);
+    }
+
+    public void FinishCalibration()
+    {
+        isCalibrating = false;
+        levelObject.SetActive(true);
+        navigationManager.StartNavigation();
+        calibrateButton.interactable = true;
     }
 }

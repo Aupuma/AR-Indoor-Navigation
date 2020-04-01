@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 848409ee8ba454f42a5ddff137688a27, type: 3}
-  m_Name: ReferenceImageLibrary
+  m_Name: NavigationTrackerImageLibrary
   m_EditorClassIdentifier: 
   m_GuidLow: 5128792821232808429
   m_GuidHigh: 3735266268586382

@@ -37,6 +37,7 @@ public class NavigationManager : MonoBehaviour
     {
         personIndicator.position = new Vector3(arCamera.transform.position.x, personIndicator.position.y, arCamera.transform.position.z);
         personPositionConstraint.constraintActive = true;
+        navMeshSurface.BuildNavMesh();
     }
 
     void Update()
