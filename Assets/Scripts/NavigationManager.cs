@@ -21,9 +21,6 @@ public class NavigationManager : MonoBehaviour
 
     private Vector3 currentDestination;
 
-    float pressingTimer = 0f;
-    public float maxPressingTime = 0.5f;
-
     bool isDestinationSet = false;
 
     //create initial path, get linerenderer.
@@ -43,28 +40,14 @@ public class NavigationManager : MonoBehaviour
     void Update()
     {
 
-        if (Input.GetMouseButton(0))
-        {
-            if (pressingTimer < maxPressingTime)
-            {
-                pressingTimer += Time.deltaTime;
-            }
-            else
-            {
-                SetDestination(Input.mousePosition);
-                pressingTimer = 0f;
-            }
-        }
-        if (Input.GetMouseButtonUp(0))
-        {
-            pressingTimer = 0f;
-        }
+        
 
         if (isDestinationSet)
         {
             CalculatePath();
             //CheckIfDestinationReached();
         }
+
 
     }
 
