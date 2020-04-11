@@ -56,7 +56,7 @@ public class Minimap : MonoBehaviour
                 }
                 else
                 {
-                    navigationManager.SetDestination(Input.mousePosition);
+                    navigationManager.SetManualDestination(Input.mousePosition);
                     pressingTimer = 0f;
                 }
             }

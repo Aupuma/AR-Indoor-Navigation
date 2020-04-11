@@ -7,27 +7,33 @@ using UnityEngine.Animations;
 
 public class NavigationManager : MonoBehaviour
 {
-    public Transform[] destinations; // list of destination positions
-    private NavMeshPath path; // current calculated path
-    public LineRenderer line; // linerenderer to display path
-    public Transform target; // current chosen destination
+    [Header("References")]
+    public NavMeshSurface navMeshSurface;
+    NavMeshPath path; // current calculated path
+
+    public Camera topDownCamera;
+    public LineRenderer topDownLine;
 
     public Camera arCamera;
+    public ARLinePooler arLinePooler; 
+
     public Transform personIndicator;
     public PositionConstraint personPositionConstraint;
 
-    public Camera topDownCamera;
-    public NavMeshSurface navMeshSurface;
+    public POIManager poiManager;
 
-    private Vector3 currentDestination;
+    [Header("Parameters")]
+    public float distanceToEndNavigation;
 
+    Vector3 currentDestination;
     bool isDestinationSet = false;
 
     //create initial path, get linerenderer.
     void Start()
     {
         path = new NavMeshPath();
-        line.enabled = false;
+        poiManager.OnPoiSelected += SetDestination;
+        topDownLine.gameObject.SetActive(false);
     }
 
     public void StartNavigation()
@@ -39,28 +45,28 @@ public class NavigationManager : MonoBehaviour
 
     void Update()
     {
-
-        
-
         if (isDestinationSet)
         {
-            CalculatePath();
-            //CheckIfDestinationReached();
+            if (Vector3.Distance(personIndicator.position, currentDestination) < distanceToEndNavigation)
+            {
+                isDestinationSet = false;
+                poiManager.DeselectPois();
+                topDownLine.gameObject.SetActive(false);
+                arLinePooler.HideLines();
+            }
+            else
+            {
+                UpdateTopDownPath();
+            }
         }
-
-
     }
 
-    private void CheckIfDestinationReached()
-    {
-        throw new NotImplementedException();
-    }
 
     /// <summary>
     /// Checks if point pressed on the screen is available as destination in the map
     /// </summary>
     /// <param name="mousePosition"></param>
-    public void SetDestination(Vector2 mousePosition)
+    public void SetManualDestination(Vector2 mousePosition)
     {
         Vector2 rayVector = arCamera.GetComponent<Camera>().ScreenToViewportPoint(mousePosition);
         Ray camRay = topDownCamera.ViewportPointToRay(rayVector);
@@ -72,26 +78,34 @@ public class NavigationManager : MonoBehaviour
             NavMeshHit navMeshHit;
             if(NavMesh.SamplePosition(hitInfo.point, out navMeshHit, 0.5f, NavMesh.AllAreas))
             {
-                currentDestination = navMeshHit.position;
-                line.enabled = true;
-                isDestinationSet = true;
+                poiManager.DeselectPois();
+                SetDestination(navMeshHit.position);
             }
         }
     }
 
+
     /// <summary>
-    /// Draws the path both in AR and in the map
+    /// Sets the destination point and starts navigation
     /// </summary>
-    private void CalculatePath()
+    /// <param name="worldPosition"></param>
+    public void SetDestination(Vector3 worldPosition)
+    {
+        currentDestination = worldPosition;
+        isDestinationSet = true;
+
+        topDownLine.gameObject.SetActive(true);
+
+        Vector3 arOriginPoint = new Vector3(personIndicator.position.x, currentDestination.y, personIndicator.position.y);
+        NavMesh.CalculatePath(personIndicator.position, currentDestination, NavMesh.AllAreas, path);
+        arLinePooler.SetLinePositions(path.corners);
+    }
+
+
+    private void UpdateTopDownPath()
     {
         NavMesh.CalculatePath(personIndicator.position, currentDestination, NavMesh.AllAreas, path);
-        //lost path due to standing above obstacle (drift)
-        if (path.corners.Length == 0)
-        {
-            Debug.Log("Try moving away for obstacles (optionally recalibrate)");
-        }
-        line.positionCount = path.corners.Length;
-        line.SetPositions(path.corners);
-        //line.enabled = true;
+        topDownLine.positionCount = path.corners.Length;
+        topDownLine.SetPositions(path.corners);
     }
 }

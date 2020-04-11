@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 7481018934054365263}
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.71329826, y: 0.71329826, z: 0.71329826}
   m_Children: []
   m_Father: {fileID: 7481018935744125618}
   m_RootOrder: 0
@@ -105,9 +105,9 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7481018934251164050}
-  m_LocalRotation: {x: 0, y: -0.8884314, z: -0, w: 0.45900944}
+  m_LocalRotation: {x: -0.011726257, y: -0.9873838, z: -0.088562176, w: 0.13073868}
   m_LocalPosition: {x: 0, y: 1, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.60767, y: 0.60767, z: 0.60767}
   m_Children: []
   m_Father: {fileID: 7481018935744125618}
   m_RootOrder: 1
@@ -231,4 +231,4 @@ MonoBehaviour:
   sprite: {fileID: 0}
   symbolQuad: {fileID: 7481018934251164049}
   floorIndicator: {fileID: 7481018934054365261}
-  selectedColor: {r: 0, g: 0, b: 0, a: 0}
+  selectedColor: {r: 1, g: 0.6011123, b: 0, a: 1}
