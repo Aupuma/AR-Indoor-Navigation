@@ -13,15 +13,15 @@ TagManager:
   - UI
   - 
   - 
-  - PersonIndicator
-  - ARmarker
-  - POI
+  - DebugElements
+  - 
+  - 
   - floor
   - walls
   - outside
   - AugmentedReality
   - Map
-  - 
+  - Minimap
   - 
   - 
   - 

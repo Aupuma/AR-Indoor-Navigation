@@ -9,7 +9,7 @@ public class NavigationManager : MonoBehaviour
 {
     [Header("References")]
     public NavMeshSurface navMeshSurface;
-    NavMeshPath path; // current calculated path
+    NavMeshPath _path; // current calculated path
 
     public Camera topDownCamera;
     public LineRenderer topDownLine;
@@ -23,15 +23,15 @@ public class NavigationManager : MonoBehaviour
     public POIManager poiManager;
 
     [Header("Parameters")]
-    public float distanceToEndNavigation;
+    [SerializeField] float _distanceToEndNavigation;
 
-    Vector3 currentDestination;
-    bool isDestinationSet = false;
+    Vector3 _currentDestination;
+    bool _isDestinationSet = false;
 
     //create initial path, get linerenderer.
     void Start()
     {
-        path = new NavMeshPath();
+        _path = new NavMeshPath();
         poiManager.OnPoiSelected += SetDestination;
         topDownLine.gameObject.SetActive(false);
     }
@@ -45,11 +45,11 @@ public class NavigationManager : MonoBehaviour
 
     void Update()
     {
-        if (isDestinationSet)
+        if (_isDestinationSet)
         {
-            if (Vector3.Distance(personIndicator.position, currentDestination) < distanceToEndNavigation)
+            if (Vector3.Distance(personIndicator.position, _currentDestination) < _distanceToEndNavigation)
             {
-                isDestinationSet = false;
+                _isDestinationSet = false;
                 poiManager.DeselectPois();
                 topDownLine.gameObject.SetActive(false);
                 arLinePooler.HideLines();
@@ -91,21 +91,21 @@ public class NavigationManager : MonoBehaviour
     /// <param name="worldPosition"></param>
     public void SetDestination(Vector3 worldPosition)
     {
-        currentDestination = worldPosition;
-        isDestinationSet = true;
+        _currentDestination = worldPosition;
+        _isDestinationSet = true;
 
         topDownLine.gameObject.SetActive(true);
 
-        Vector3 arOriginPoint = new Vector3(personIndicator.position.x, currentDestination.y, personIndicator.position.y);
-        NavMesh.CalculatePath(personIndicator.position, currentDestination, NavMesh.AllAreas, path);
-        arLinePooler.SetLinePositions(path.corners);
+        Vector3 arOriginPoint = new Vector3(personIndicator.position.x, _currentDestination.y, personIndicator.position.y);
+        NavMesh.CalculatePath(personIndicator.position, _currentDestination, NavMesh.AllAreas, _path);
+        arLinePooler.SetLinePositions(_path.corners);
     }
 
 
     private void UpdateTopDownPath()
     {
-        NavMesh.CalculatePath(personIndicator.position, currentDestination, NavMesh.AllAreas, path);
-        topDownLine.positionCount = path.corners.Length;
-        topDownLine.SetPositions(path.corners);
+        NavMesh.CalculatePath(personIndicator.position, _currentDestination, NavMesh.AllAreas, _path);
+        topDownLine.positionCount = _path.corners.Length;
+        topDownLine.SetPositions(_path.corners);
     }
 }

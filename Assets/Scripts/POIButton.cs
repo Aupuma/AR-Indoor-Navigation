@@ -5,42 +5,44 @@ using UnityEngine.UI;
 
 public class POIButton : MonoBehaviour
 {
-    public Image icon;
-    public Image background;
+    [SerializeField] Image _icon;
+    [SerializeField] GameObject _normalImage;
+    [SerializeField] GameObject _pinImage;
 
-    public Color selectedIconColor;
-    public Color normalIconColor;
+    int _myIndex;
+    bool _isSelected = false;
 
-    public Color selectedBackgroundColor;
-    public Color normalBackgroundColor;
 
-    private int myIndex;
+    bool _isPressedEnabled = false;
+    public bool IsPressedEnabled { get => _isPressedEnabled; set => _isPressedEnabled = value; }
 
-    private bool isSelected = false;
 
     public delegate void PoiButtonDelegate(int poiIndex);
     public PoiButtonDelegate OnPoiButtonPressed;
 
+
     public void SetData(Sprite sprite, int index)
     {
-        icon.sprite = sprite;
-        myIndex = index;
+        _icon.sprite = sprite;
+        _myIndex = index;
+
+        Deselect();
     }
 
     public void Select()
     {
-        if (isSelected) return;
+        if (_isSelected || _isPressedEnabled == false) return;
 
-        isSelected = true;
-        OnPoiButtonPressed?.Invoke(myIndex);
-        icon.color = selectedIconColor;
-        background.color = selectedBackgroundColor;
+        _isSelected = true;
+        OnPoiButtonPressed?.Invoke(_myIndex);
+        _pinImage.SetActive(true);
+        _normalImage.SetActive(false);
     }
 
     public void Deselect()
     {
-        isSelected = false;
-        icon.color = normalIconColor;
-        background.color = normalBackgroundColor;
+        _isSelected = false;
+        _pinImage.SetActive(false);
+        _normalImage.SetActive(true);
     }
 }
