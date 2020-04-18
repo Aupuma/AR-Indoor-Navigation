@@ -5,32 +5,44 @@ using UnityEngine.Animations;
 
 public class POI : MonoBehaviour
 {
-    [SerializeField] Sprite _sprite;
-    public Sprite Sprite => _sprite;
+    [SerializeField] Sprite _pinSprite;
+    [SerializeField] Color _pinColor;
 
     [Header("AR components")]
     [SerializeField] AimConstraint _arPinAimConstraint;
     [SerializeField] MeshRenderer _arSymbol;
-    [SerializeField] MeshRenderer _arFloorIndicator;
-    [SerializeField] Color _selectedFloorColor;
 
     [Header("Minimap components")]
     [SerializeField] RotationConstraint _minimapPinRotationConstraint;
+    [SerializeField] MeshRenderer _minimapPin;
     [SerializeField] MeshRenderer _minimapSymbol;
-    [SerializeField] GameObject _minimapPin;
-    [SerializeField] GameObject _objectivePin;
 
-    Color _nonSelectedColor;
+    [Header("Large map components")]
+    [SerializeField] Transform _largeMapPinParent;
+    [SerializeField] float _scaleMultiplier;
+    [SerializeField] MeshRenderer _largeMapPin;
+    [SerializeField] MeshRenderer _largeMapSymbol;
+
+    Camera _largeMapCamera;
 
     // Start is called before the first frame update
     void Start()
     {
-        _arSymbol.material.mainTexture = _sprite.texture;
-        _minimapSymbol.material.mainTexture = _sprite.texture;
-        _nonSelectedColor = _arFloorIndicator.material.color;
+        _arSymbol.material.mainTexture = _pinSprite.texture;
+        _minimapSymbol.material.mainTexture = _pinSprite.texture;
+        _largeMapSymbol.material.mainTexture = _pinSprite.texture;
+
+        _minimapPin.material.color = _pinColor;
+        _largeMapPin.material.color = _pinColor;
     }
 
-    public void SetConstraints(Camera arCamera, Camera minimapCamera)
+    private void Update()
+    {
+        if(_largeMapCamera != null)
+            _largeMapPinParent.localScale = Vector3.one * _scaleMultiplier * _largeMapCamera.orthographicSize;
+    }
+
+    public void SetConstraints(Camera arCamera, Camera minimapCamera, Camera largeMapCamera)
     {
         ConstraintSource arSource = new ConstraintSource();
         arSource.sourceTransform = arCamera.transform;
@@ -43,19 +55,7 @@ public class POI : MonoBehaviour
         minimapSource.weight = 1;
         _minimapPinRotationConstraint.AddSource(minimapSource);
         _minimapPinRotationConstraint.constraintActive = true;
-    }
 
-    public void SetAsDestination()
-    {
-        _arFloorIndicator.material.color = _selectedFloorColor;
-        _minimapPin.SetActive(false);
-        _objectivePin.SetActive(true);
-    }
-
-    public void DeselectAsDestination()
-    {
-        _arFloorIndicator.material.color = _nonSelectedColor;
-        _minimapPin.SetActive(true);
-        _objectivePin.SetActive(false);
+        _largeMapCamera = largeMapCamera;
     }
 }

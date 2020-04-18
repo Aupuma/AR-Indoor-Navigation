@@ -19,6 +19,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] GameObject _largeMap;
 
     Sequence _fadeSequence;
+    bool _isLargeMapVisible = false;
 
     // Start is called before the first frame update
     void Start()
@@ -31,27 +32,37 @@ public class UIManager : MonoBehaviour
         _fadeSequence.Pause();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     public void MinimapPressed()
     {
-        _miniMap.SetActive(false);
-        _fadeSequence.PlayForward();
-        _largeMap.SetActive(true);
-        _poiManager.SwitchToLargeMapMode();
+        _fadeSequence.Restart();
+        _fadeSequence.Play();
+        Invoke("SwitchMapMode", _fadeTime / 2);
     }
 
 
     public void BackFromLargeMapPressed()
     {
-        _miniMap.SetActive(true);
-        _fadeSequence.PlayForward();
-        _largeMap.SetActive(false);
-        _poiManager.SwitchToMinimapMode();
+        _fadeSequence.Restart();
+        _fadeSequence.Play();
+        Invoke("SwitchMapMode", _fadeTime / 2);
+    }
+
+    private void SwitchMapMode()
+    {
+        if (_isLargeMapVisible)
+        {
+            _isLargeMapVisible = false;
+            _miniMap.SetActive(true);
+            _largeMap.SetActive(false);
+            _poiManager.SwitchToMinimapMode();
+        }
+        else
+        {
+            _isLargeMapVisible = true;
+            _miniMap.SetActive(false);
+            _largeMap.SetActive(true);
+            _poiManager.SwitchToLargeMapMode();
+        }
     }
 
     public void SetMapScreenVisibility(bool visible)

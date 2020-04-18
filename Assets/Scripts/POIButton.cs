@@ -12,11 +12,6 @@ public class POIButton : MonoBehaviour
     int _myIndex;
     bool _isSelected = false;
 
-
-    bool _isPressedEnabled = false;
-    public bool IsPressedEnabled { get => _isPressedEnabled; set => _isPressedEnabled = value; }
-
-
     public delegate void PoiButtonDelegate(int poiIndex);
     public PoiButtonDelegate OnPoiButtonPressed;
 
@@ -31,7 +26,7 @@ public class POIButton : MonoBehaviour
 
     public void Select()
     {
-        if (_isSelected || _isPressedEnabled == false) return;
+        if (_isSelected) return;
 
         _isSelected = true;
         OnPoiButtonPressed?.Invoke(_myIndex);

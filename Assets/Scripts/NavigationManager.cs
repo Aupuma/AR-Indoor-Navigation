@@ -7,24 +7,26 @@ using UnityEngine.Animations;
 
 public class NavigationManager : MonoBehaviour
 {
-    [Header("References")]
-    public NavMeshSurface navMeshSurface;
-    NavMeshPath _path; // current calculated path
+    [Header("General references")]
+    [SerializeField] NavMeshSurface _navMeshSurface;
+    [SerializeField] Transform _userIndicator;
+    [SerializeField] POIManager _poiManager;
+    [SerializeField] GameObject _startPoint;
+    [SerializeField] GameObject _finishPoint;
 
-    public Camera topDownCamera;
-    public LineRenderer topDownLine;
+    [Header("Map")]
+    [SerializeField] Camera _topDownCamera;
+    [SerializeField] LineRenderer _topDownLine;
 
-    public Camera arCamera;
-    public ARLinePooler arLinePooler; 
-
-    public Transform personIndicator;
-    public PositionConstraint personPositionConstraint;
-
-    public POIManager poiManager;
+    [Header("Augmented reality")]
+    [SerializeField] Camera _arCamera;
+    [SerializeField] ARLinePooler _arLinePooler; 
 
     [Header("Parameters")]
     [SerializeField] float _distanceToEndNavigation;
+    [SerializeField] float _arLineHeight;
 
+    NavMeshPath _path;
     Vector3 _currentDestination;
     bool _isDestinationSet = false;
 
@@ -32,31 +34,23 @@ public class NavigationManager : MonoBehaviour
     void Start()
     {
         _path = new NavMeshPath();
-        poiManager.OnPoiSelected += SetDestination;
-        topDownLine.gameObject.SetActive(false);
+        _poiManager.OnPoiSelected += CalculatePathTo;
+        _topDownLine.gameObject.SetActive(false);
     }
 
-    public void StartNavigation()
+    public void SetNavigationReady()
     {
-        personIndicator.position = new Vector3(arCamera.transform.position.x, personIndicator.position.y, arCamera.transform.position.z);
-        personPositionConstraint.constraintActive = true;
-        navMeshSurface.BuildNavMesh();
+        _userIndicator.position = new Vector3(_arCamera.transform.position.x, _userIndicator.position.y, _arCamera.transform.position.z);
+        _navMeshSurface.BuildNavMesh();
     }
 
     void Update()
     {
         if (_isDestinationSet)
         {
-            if (Vector3.Distance(personIndicator.position, _currentDestination) < _distanceToEndNavigation)
+            if (Vector3.Distance(_userIndicator.position, _currentDestination) < _distanceToEndNavigation)
             {
-                _isDestinationSet = false;
-                poiManager.DeselectPois();
-                topDownLine.gameObject.SetActive(false);
-                arLinePooler.HideLines();
-            }
-            else
-            {
-                UpdateTopDownPath();
+                EndNavigation();
             }
         }
     }
@@ -68,8 +62,8 @@ public class NavigationManager : MonoBehaviour
     /// <param name="mousePosition"></param>
     public void SetManualDestination(Vector2 mousePosition)
     {
-        Vector2 rayVector = arCamera.GetComponent<Camera>().ScreenToViewportPoint(mousePosition);
-        Ray camRay = topDownCamera.ViewportPointToRay(rayVector);
+        Vector2 rayVector = _arCamera.GetComponent<Camera>().ScreenToViewportPoint(mousePosition);
+        Ray camRay = _topDownCamera.ViewportPointToRay(rayVector);
         RaycastHit hitInfo;
         int layer_mask = LayerMask.GetMask("floor");
 
@@ -78,34 +72,44 @@ public class NavigationManager : MonoBehaviour
             NavMeshHit navMeshHit;
             if(NavMesh.SamplePosition(hitInfo.point, out navMeshHit, 0.5f, NavMesh.AllAreas))
             {
-                poiManager.DeselectPois();
-                SetDestination(navMeshHit.position);
+                _poiManager.DeselectPois();
+                _finishPoint.SetActive(true);
+                _finishPoint.transform.position = navMeshHit.position;
+                CalculatePathTo(navMeshHit.position);
             }
         }
     }
 
-
-    /// <summary>
-    /// Sets the destination point and starts navigation
-    /// </summary>
-    /// <param name="worldPosition"></param>
-    public void SetDestination(Vector3 worldPosition)
+    public void CalculatePathTo(Vector3 endPosition)
     {
-        _currentDestination = worldPosition;
-        _isDestinationSet = true;
+        _currentDestination = endPosition;
 
-        topDownLine.gameObject.SetActive(true);
+        Vector3 originPoint = new Vector3(_userIndicator.position.x, _currentDestination.y, _userIndicator.position.z);
+        NavMesh.CalculatePath(originPoint, _currentDestination, NavMesh.AllAreas, _path);
 
-        Vector3 arOriginPoint = new Vector3(personIndicator.position.x, _currentDestination.y, personIndicator.position.y);
-        NavMesh.CalculatePath(personIndicator.position, _currentDestination, NavMesh.AllAreas, _path);
-        arLinePooler.SetLinePositions(_path.corners);
+        _arLinePooler.SetLinePositions(_path.corners);
+        _topDownLine.positionCount = _path.corners.Length;
+        _topDownLine.SetPositions(_path.corners);
+
+        _startPoint.transform.position = originPoint;
+
+        StartNavigation();
     }
 
-
-    private void UpdateTopDownPath()
+    private void StartNavigation()
     {
-        NavMesh.CalculatePath(personIndicator.position, _currentDestination, NavMesh.AllAreas, _path);
-        topDownLine.positionCount = _path.corners.Length;
-        topDownLine.SetPositions(_path.corners);
+        _startPoint.SetActive(true);
+        _topDownLine.gameObject.SetActive(true);
+        _isDestinationSet = true;
+    }
+
+    private void EndNavigation()
+    {
+        _isDestinationSet = false;
+        _poiManager.DeselectPois();
+        _topDownLine.gameObject.SetActive(false);
+        _arLinePooler.HideLines();
+        _startPoint.SetActive(false);
+        _finishPoint.SetActive(false);
     }
 }

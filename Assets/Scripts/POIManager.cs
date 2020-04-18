@@ -7,14 +7,15 @@ public class POIManager : MonoBehaviour
 {
     [SerializeField] POI[] _pointsOfInterest;
 
+    [Header("UI")]
     [SerializeField] POIButton _poiButtonPrefab;
     [SerializeField] Transform _poiButtonsParent;
+    [SerializeField] GameObject _manualDestinationWorldMarker;
+    [SerializeField] GameObject _manualDestinationUiMarker;
 
-    [SerializeField] RawImage _largeMap;
+    [Header("Cameras")]
     [SerializeField] Camera _largeMapCamera;
-
     [SerializeField] Camera _arCamera;
-
     [SerializeField] Camera _minimapCamera;
 
     POIButton[] _poiButtons;
@@ -29,9 +30,9 @@ public class POIManager : MonoBehaviour
 
         for (int i = 0; i < _pointsOfInterest.Length; i++)
         {
-            _pointsOfInterest[i].SetConstraints(_arCamera, _minimapCamera);
+            //_pointsOfInterest[i].SetConstraints(_arCamera, _minimapCamera);
             POIButton buttonInstance = Instantiate(_poiButtonPrefab, _poiButtonsParent);
-            buttonInstance.SetData(_pointsOfInterest[i].Sprite,i);
+            //buttonInstance.SetData(_pointsOfInterest[i].Sprite,i);
             buttonInstance.OnPoiButtonPressed += SelectPoi;
             _poiButtons[i] = buttonInstance;
         }
@@ -45,13 +46,13 @@ public class POIManager : MonoBehaviour
         }
 
         _selectedPoiIndex = index;
-        _pointsOfInterest[_selectedPoiIndex].SetAsDestination();
+        //_pointsOfInterest[_selectedPoiIndex].SetAsDestination();
         OnPoiSelected?.Invoke(_pointsOfInterest[_selectedPoiIndex].transform.position);
     }
 
     private void DeselectPoi(int index)
     {
-        _pointsOfInterest[index].DeselectAsDestination();
+       // _pointsOfInterest[index].DeselectAsDestination();
         _poiButtons[index].Deselect();
     }
 
@@ -78,31 +79,31 @@ public class POIManager : MonoBehaviour
 
     void Update()
     {
-        if(_largeMapCamera.enabled)
-            UpdatePoiButtonsPosition();
+        if (_largeMapCamera.enabled)
+        {
+            for (int i = 0; i < _pointsOfInterest.Length; i++)
+            {
+                ProjectWorldToUiElement(_pointsOfInterest[i].gameObject, _poiButtons[i].gameObject);
+            }
+            if(_manualDestinationWorldMarker.activeSelf)
+                ProjectWorldToUiElement(_manualDestinationWorldMarker, _manualDestinationUiMarker);
+        }
     }
 
-
-    /// <summary>
-    /// 
-    /// </summary>
-    private void UpdatePoiButtonsPosition()
+    private void ProjectWorldToUiElement(GameObject worldElement, GameObject uiElement)
     {
-        for (int i = 0; i < _pointsOfInterest.Length; i++)
-        {
-            Vector3 poiPosition = _pointsOfInterest[i].transform.position;
-            Vector3 poiViewportPosition = _largeMapCamera.WorldToViewportPoint(poiPosition);
+        Vector3 objectWorldPosition = worldElement.transform.position;
+        Vector3 objectViewportPosition = _largeMapCamera.WorldToViewportPoint(objectWorldPosition);
 
-            if (poiViewportPosition.x > 0 && poiViewportPosition.x < 1 &&
-                poiViewportPosition.y > 0 && poiViewportPosition.y < 1) //Inside the viewport of the camera
-            {
-                _poiButtons[i].gameObject.SetActive(true);
-                _poiButtons[i].transform.position = _arCamera.ViewportToScreenPoint(poiViewportPosition);
-            }
-            else
-            {
-                _poiButtons[i].gameObject.SetActive(false);
-            }
+        if (objectViewportPosition.x > 0 && objectViewportPosition.x < 1 &&
+            objectViewportPosition.y > 0 && objectViewportPosition.y < 1) //Inside the viewport of the camera
+        {
+            uiElement.SetActive(true);
+            uiElement.transform.position = _arCamera.ViewportToScreenPoint(objectViewportPosition);
+        }
+        else
+        {
+            uiElement.SetActive(false);
         }
     }
 }

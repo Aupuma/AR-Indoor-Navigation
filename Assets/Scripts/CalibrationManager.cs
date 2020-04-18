@@ -121,7 +121,7 @@ public class CalibrationManager : MonoBehaviour
     {
         isCalibrating = false;
         levelObject.SetActive(true);
-        navigationManager.StartNavigation();
+        navigationManager.SetNavigationReady();
         calibrateButton.interactable = true;
     }
 }
