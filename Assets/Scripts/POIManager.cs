@@ -7,62 +7,31 @@ public class POIManager : MonoBehaviour
 {
     [SerializeField] POI[] _pointsOfInterest;
 
-    [Header("UI")]
-    [SerializeField] POIButton _poiButtonPrefab;
-    [SerializeField] Transform _poiButtonsParent;
-    [SerializeField] GameObject _manualDestinationWorldMarker;
-    [SerializeField] GameObject _manualDestinationUiMarker;
-
     [Header("Cameras")]
     [SerializeField] Camera _largeMapCamera;
     [SerializeField] Camera _arCamera;
     [SerializeField] Camera _minimapCamera;
 
-    POIButton[] _poiButtons;
-    int _selectedPoiIndex = -1;
-
     public delegate void PoiSelectionDelegate(Vector3 position);
     public PoiSelectionDelegate OnPoiSelected;
 
+    POI _selectedPoi;
+
     private void Start()
     {
-        _poiButtons = new POIButton[_pointsOfInterest.Length];
-
         for (int i = 0; i < _pointsOfInterest.Length; i++)
         {
-            //_pointsOfInterest[i].SetConstraints(_arCamera, _minimapCamera);
-            POIButton buttonInstance = Instantiate(_poiButtonPrefab, _poiButtonsParent);
-            //buttonInstance.SetData(_pointsOfInterest[i].Sprite,i);
-            buttonInstance.OnPoiButtonPressed += SelectPoi;
-            _poiButtons[i] = buttonInstance;
+            _pointsOfInterest[i].SetConstraints(_arCamera, _minimapCamera,_largeMapCamera);
         }
     }
 
-    private void SelectPoi(int index)
+    public void DeselectPoi()
     {
-        if(index != _selectedPoiIndex && _selectedPoiIndex != -1)
+        if (_selectedPoi != null)
         {
-            DeselectPoi(_selectedPoiIndex);
+            _selectedPoi.Deselect();
+            _selectedPoi = null;
         }
-
-        _selectedPoiIndex = index;
-        //_pointsOfInterest[_selectedPoiIndex].SetAsDestination();
-        OnPoiSelected?.Invoke(_pointsOfInterest[_selectedPoiIndex].transform.position);
-    }
-
-    private void DeselectPoi(int index)
-    {
-       // _pointsOfInterest[index].DeselectAsDestination();
-        _poiButtons[index].Deselect();
-    }
-
-    public void DeselectPois()
-    {
-        for (int i = 0; i < _pointsOfInterest.Length; i++)
-        {
-            DeselectPoi(i);
-        }
-        _selectedPoiIndex = -1;
     }
 
     public void SwitchToMinimapMode()
@@ -79,31 +48,28 @@ public class POIManager : MonoBehaviour
 
     void Update()
     {
-        if (_largeMapCamera.enabled)
+        if (_largeMapCamera.enabled && Input.GetMouseButtonDown(0))
         {
-            for (int i = 0; i < _pointsOfInterest.Length; i++)
-            {
-                ProjectWorldToUiElement(_pointsOfInterest[i].gameObject, _poiButtons[i].gameObject);
-            }
-            if(_manualDestinationWorldMarker.activeSelf)
-                ProjectWorldToUiElement(_manualDestinationWorldMarker, _manualDestinationUiMarker);
+            RaycastForPoi(Input.mousePosition);
         }
     }
 
-    private void ProjectWorldToUiElement(GameObject worldElement, GameObject uiElement)
+    private void RaycastForPoi(Vector2 mousePosition)
     {
-        Vector3 objectWorldPosition = worldElement.transform.position;
-        Vector3 objectViewportPosition = _largeMapCamera.WorldToViewportPoint(objectWorldPosition);
+        Vector2 rayVector = _arCamera.ScreenToViewportPoint(mousePosition);
+        Ray camRay = _largeMapCamera.ViewportPointToRay(rayVector);
+        RaycastHit hitInfo;
+        int layer_mask = LayerMask.GetMask("Map");
 
-        if (objectViewportPosition.x > 0 && objectViewportPosition.x < 1 &&
-            objectViewportPosition.y > 0 && objectViewportPosition.y < 1) //Inside the viewport of the camera
+        if (Physics.Raycast(camRay, out hitInfo, layer_mask))
         {
-            uiElement.SetActive(true);
-            uiElement.transform.position = _arCamera.ViewportToScreenPoint(objectViewportPosition);
-        }
-        else
-        {
-            uiElement.SetActive(false);
+            if(hitInfo.collider.GetComponentInParent<POI>() != null)
+            {
+                DeselectPoi();
+                _selectedPoi = hitInfo.collider.GetComponentInParent<POI>();
+                _selectedPoi.Select();
+                OnPoiSelected?.Invoke(_selectedPoi.transform.position);
+            }
         }
     }
 }

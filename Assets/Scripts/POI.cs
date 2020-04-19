@@ -16,14 +16,16 @@ public class POI : MonoBehaviour
     [SerializeField] RotationConstraint _minimapPinRotationConstraint;
     [SerializeField] MeshRenderer _minimapPin;
     [SerializeField] MeshRenderer _minimapSymbol;
+    [SerializeField] GameObject _minimapObjective;
 
     [Header("Large map components")]
-    [SerializeField] Transform _largeMapPinParent;
-    [SerializeField] float _scaleMultiplier;
+    [SerializeField] ScaleWithZoomConstraint _largeMapPinZoomConstraint;
     [SerializeField] MeshRenderer _largeMapPin;
     [SerializeField] MeshRenderer _largeMapSymbol;
+    [SerializeField] GameObject _largeMapObjective;
 
-    Camera _largeMapCamera;
+    bool _isSelected = false;
+    public bool IsSelected => _isSelected;
 
     // Start is called before the first frame update
     void Start()
@@ -34,12 +36,6 @@ public class POI : MonoBehaviour
 
         _minimapPin.material.color = _pinColor;
         _largeMapPin.material.color = _pinColor;
-    }
-
-    private void Update()
-    {
-        if(_largeMapCamera != null)
-            _largeMapPinParent.localScale = Vector3.one * _scaleMultiplier * _largeMapCamera.orthographicSize;
     }
 
     public void SetConstraints(Camera arCamera, Camera minimapCamera, Camera largeMapCamera)
@@ -56,6 +52,26 @@ public class POI : MonoBehaviour
         _minimapPinRotationConstraint.AddSource(minimapSource);
         _minimapPinRotationConstraint.constraintActive = true;
 
-        _largeMapCamera = largeMapCamera;
+        _largeMapPinZoomConstraint.ConstraintCamera = largeMapCamera;
+    }
+
+    public void Select()
+    {
+        if (_isSelected) return;
+
+        _minimapObjective.SetActive(true);
+        _minimapPin.gameObject.SetActive(false);
+
+        _largeMapObjective.SetActive(true);
+        _largeMapPin.gameObject.SetActive(false);
+    }
+
+    public void Deselect()
+    {
+        _minimapObjective.SetActive(false);
+        _minimapPin.gameObject.SetActive(true);
+
+        _largeMapObjective.SetActive(false);
+        _largeMapPin.gameObject.SetActive(true);
     }
 }

@@ -16,11 +16,11 @@ public class NavigationManager : MonoBehaviour
 
     [Header("Map")]
     [SerializeField] Camera _topDownCamera;
-    [SerializeField] LineRenderer _topDownLine;
+    [SerializeField] LinePool _topDownLinePool;
 
     [Header("Augmented reality")]
     [SerializeField] Camera _arCamera;
-    [SerializeField] ARLinePooler _arLinePooler; 
+    [SerializeField] LinePool _arLinePool; 
 
     [Header("Parameters")]
     [SerializeField] float _distanceToEndNavigation;
@@ -34,8 +34,7 @@ public class NavigationManager : MonoBehaviour
     void Start()
     {
         _path = new NavMeshPath();
-        _poiManager.OnPoiSelected += CalculatePathTo;
-        _topDownLine.gameObject.SetActive(false);
+        _poiManager.OnPoiSelected += SetPoiAsDestination;
     }
 
     public void SetNavigationReady()
@@ -62,7 +61,7 @@ public class NavigationManager : MonoBehaviour
     /// <param name="mousePosition"></param>
     public void SetManualDestination(Vector2 mousePosition)
     {
-        Vector2 rayVector = _arCamera.GetComponent<Camera>().ScreenToViewportPoint(mousePosition);
+        Vector2 rayVector = _arCamera.ScreenToViewportPoint(mousePosition);
         Ray camRay = _topDownCamera.ViewportPointToRay(rayVector);
         RaycastHit hitInfo;
         int layer_mask = LayerMask.GetMask("floor");
@@ -72,43 +71,40 @@ public class NavigationManager : MonoBehaviour
             NavMeshHit navMeshHit;
             if(NavMesh.SamplePosition(hitInfo.point, out navMeshHit, 0.5f, NavMesh.AllAreas))
             {
-                _poiManager.DeselectPois();
+                _poiManager.DeselectPoi();
                 _finishPoint.SetActive(true);
                 _finishPoint.transform.position = navMeshHit.position;
-                CalculatePathTo(navMeshHit.position);
+                SetDestination(navMeshHit.position);
             }
         }
     }
 
-    public void CalculatePathTo(Vector3 endPosition)
+    private void SetPoiAsDestination(Vector3 poiPosition)
     {
+        _finishPoint.SetActive(false);
+        SetDestination(poiPosition);
+    }
+
+    public void SetDestination(Vector3 endPosition)
+    {
+        _isDestinationSet = true;
         _currentDestination = endPosition;
 
         Vector3 originPoint = new Vector3(_userIndicator.position.x, _currentDestination.y, _userIndicator.position.z);
         NavMesh.CalculatePath(originPoint, _currentDestination, NavMesh.AllAreas, _path);
+        _arLinePool.SetLinePositions(_path.corners);
+        _topDownLinePool.SetLinePositions(_path.corners);
 
-        _arLinePooler.SetLinePositions(_path.corners);
-        _topDownLine.positionCount = _path.corners.Length;
-        _topDownLine.SetPositions(_path.corners);
-
-        _startPoint.transform.position = originPoint;
-
-        StartNavigation();
-    }
-
-    private void StartNavigation()
-    {
         _startPoint.SetActive(true);
-        _topDownLine.gameObject.SetActive(true);
-        _isDestinationSet = true;
+        _startPoint.transform.position = originPoint;
     }
 
     private void EndNavigation()
     {
         _isDestinationSet = false;
-        _poiManager.DeselectPois();
-        _topDownLine.gameObject.SetActive(false);
-        _arLinePooler.HideLines();
+        _poiManager.DeselectPoi();
+        _topDownLinePool.HideLines();
+        _arLinePool.HideLines();
         _startPoint.SetActive(false);
         _finishPoint.SetActive(false);
     }
