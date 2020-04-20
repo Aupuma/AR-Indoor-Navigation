@@ -1,6 +1,7 @@
 ﻿using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -69,7 +70,7 @@ public class PanController : MonoBehaviour
             _centerCameraActiveImage.gameObject.SetActive(false);
         }
 
-        DOTween.KillAll();
+        //DOTween.KillAll();
 
         Vector3 direction = _touchStartWorld - _topDownCamera.ScreenToWorldPoint(currentPos);
         _topDownCamera.transform.position += direction;

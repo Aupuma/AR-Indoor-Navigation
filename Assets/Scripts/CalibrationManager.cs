@@ -19,6 +19,9 @@ public class CalibrationManager : MonoBehaviour
     public GameObject levelObject;
     public NavigationManager navigationManager;
     public Button calibrateButton;
+    public GameObject calibrationIndicatorPrefab;
+    Animator _currentIndicatorAnimator;
+    [SerializeField] CanvasManager canvasManager;
 
     [Header("Calibration parameters")]
     bool isCalibrationReady = false;
@@ -65,10 +68,11 @@ public class CalibrationManager : MonoBehaviour
 
     void ImageManagerOnTrackedImagesChanged(ARTrackedImagesChangedEventArgs obj)
     {
-        if (obj.updated.Count > 0 && isCalibrationReady)
+        if(obj.added.Count > 1 && !isCalibrating)
         {
+            GameObject indicator = Instantiate(calibrationIndicatorPrefab, obj.added[0].transform);
+            _currentIndicatorAnimator = indicator.GetComponent<Animator>();
             isCalibrating = true;
-            isCalibrationReady = false;
         }
         else if(obj.updated.Count > 0 && isCalibrating)
         {
@@ -96,12 +100,26 @@ public class CalibrationManager : MonoBehaviour
         CalibratePosition(realTransform, virtualTransform, levelObject.transform);
     }
 
+    /// <summary>
+    /// Applies to the level transform a traslation so the position of the virtual marker
+    /// matches the position of the real marker
+    /// </summary>
+    /// <param name="realMarker"></param>
+    /// <param name="virtualMarker"></param>
+    /// <param name="level"></param>
     public void CalibratePosition(Transform realMarker, Transform virtualMarker, Transform level)
     {
         Vector3 translationVector = realMarker.position - virtualMarker.position;
         level.Translate(translationVector, Space.World);
     }
 
+    /// <summary>
+    /// Applies to the level transform a rotation so the rotation of the virtual marker
+    /// matches the rotation of the real marker
+    /// </summary>
+    /// <param name="realMarker"></param>
+    /// <param name="virtualMarker"></param>
+    /// <param name="level"></param>
     public void CalibrateRotation(Transform realMarker, Transform virtualMarker, Transform level)
     {
         // Populate the net rotation that you want the child to have.
@@ -123,5 +141,7 @@ public class CalibrationManager : MonoBehaviour
         levelObject.SetActive(true);
         navigationManager.SetNavigationReady();
         calibrateButton.interactable = true;
+        _currentIndicatorAnimator.SetTrigger("FinishCalibration");
+        this.enabled = false;
     }
 }
