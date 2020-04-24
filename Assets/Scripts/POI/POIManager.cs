@@ -12,10 +12,10 @@ public class POIManager : MonoBehaviour
     [SerializeField] Camera _arCamera;
     [SerializeField] Camera _minimapCamera;
 
+    POI _selectedPoi;
+
     public delegate void PoiSelectionDelegate(Vector3 position);
     public PoiSelectionDelegate OnPoiSelected;
-
-    POI _selectedPoi;
 
     private void Start()
     {
@@ -34,13 +34,13 @@ public class POIManager : MonoBehaviour
         }
     }
 
-    public void SwitchToMinimapMode()
+    public void ActivateMinimapCamera()
     {
         _largeMapCamera.enabled = false;
         _minimapCamera.enabled = true;
     }
 
-    public void SwitchToLargeMapMode()
+    public void ActivateLargeMapCamera()
     {
         _largeMapCamera.enabled = true;
         _minimapCamera.enabled = false;

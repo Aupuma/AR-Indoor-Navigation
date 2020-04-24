@@ -5,12 +5,6 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: Assets/ARFoundationDemos/ImageTracking/Scenes/ImageTracking.unity
-    guid: 90c9c5e58ea6f4125979d49ff7533aee
-  - enabled: 0
-    path: Assets/ARFoundationDemos/UX/Scenes/UXManagerScene.unity
-    guid: 5d9539f4c7ee5c74c85a038c90cb6e1b
   - enabled: 1
     path: Assets/Scenes/Main.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab

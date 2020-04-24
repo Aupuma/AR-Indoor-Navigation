@@ -9,13 +9,7 @@ public class PanController : MonoBehaviour
 {
     [Header("Parameters")]
     [SerializeField] float _minFingerMovementToMoveMap = 20f;
-    Vector3 _touchStartWorld; // start of finger touch
-    Vector3 _touchStartScreen;
-
     [SerializeField] float _pressingTimeToChooseDestination = 0.5f;
-    float _pressingTimer = 0f;
-
-    bool _hasMovedCamera = false;
     [SerializeField] Image _centerCameraActiveImage;
     [SerializeField] float _recenterCameraDuration = 1f;
 
@@ -23,6 +17,11 @@ public class PanController : MonoBehaviour
     [SerializeField] Transform _topDownCameraOrigin;
     [SerializeField] Camera _topDownCamera;
     [SerializeField] NavigationManager _navigationManager;
+
+    Vector3 _touchStartWorld; // start of finger touch
+    Vector3 _touchStartScreen;
+    float _pressingTimer = 0f;
+    bool _hasMovedCamera = false;
 
     void Update()
     {
@@ -69,8 +68,7 @@ public class PanController : MonoBehaviour
             _hasMovedCamera = true;
             _centerCameraActiveImage.gameObject.SetActive(false);
         }
-
-        //DOTween.KillAll();
+        DOTween.Kill(_topDownCamera.transform);
 
         Vector3 direction = _touchStartWorld - _topDownCamera.ScreenToWorldPoint(currentPos);
         _topDownCamera.transform.position += direction;
@@ -88,8 +86,6 @@ public class PanController : MonoBehaviour
     public void RecenterCamera()
     {
         _hasMovedCamera = false;
-        DOTween.KillAll();
-
         _topDownCamera.transform.position = _topDownCameraOrigin.position;
         _topDownCamera.transform.SetParent(_topDownCameraOrigin);
         _centerCameraActiveImage.gameObject.SetActive(true);

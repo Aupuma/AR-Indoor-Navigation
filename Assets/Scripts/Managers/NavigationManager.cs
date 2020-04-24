@@ -7,6 +7,15 @@ using UnityEngine.Animations;
 
 public class NavigationManager : MonoBehaviour
 {
+    #region SINGLETON
+    public static NavigationManager instance;
+
+    private void Awake()
+    {
+        instance = this;
+    } 
+    #endregion
+
     [Header("General references")]
     [SerializeField] NavMeshSurface _navMeshSurface;
     [SerializeField] Transform _userIndicator;
@@ -35,6 +44,7 @@ public class NavigationManager : MonoBehaviour
     {
         _path = new NavMeshPath();
         _poiManager.OnPoiSelected += SetPoiAsDestination;
+        _arLinePool.LineHeight = _arLineHeight;
     }
 
     public void SetNavigationReady()
@@ -85,6 +95,11 @@ public class NavigationManager : MonoBehaviour
         SetDestination(poiPosition);
     }
 
+    /// <summary>
+    /// Given a destination in the map, calculates the path to it and 
+    /// displays it in maps and AR mode
+    /// </summary>
+    /// <param name="endPosition"></param>
     public void SetDestination(Vector3 endPosition)
     {
         _isDestinationSet = true;
@@ -99,8 +114,9 @@ public class NavigationManager : MonoBehaviour
         _startPoint.transform.position = originPoint;
     }
 
-    private void EndNavigation()
+    public void EndNavigation()
     {
+        if (!_isDestinationSet) return;
         _isDestinationSet = false;
         _poiManager.DeselectPoi();
         _topDownLinePool.HideLines();
