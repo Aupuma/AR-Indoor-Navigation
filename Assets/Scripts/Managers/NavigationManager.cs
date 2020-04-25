@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Animations;
+using UnityEngine.UI;
 
 public class NavigationManager : MonoBehaviour
 {
@@ -29,15 +30,19 @@ public class NavigationManager : MonoBehaviour
 
     [Header("Augmented reality")]
     [SerializeField] Camera _arCamera;
-    [SerializeField] LinePool _arLinePool; 
+    [SerializeField] LinePool _arLinePool;
+    [SerializeField] Target _targetPointObject;
 
     [Header("Parameters")]
     [SerializeField] float _distanceToEndNavigation;
     [SerializeField] float _arLineHeight;
+    [SerializeField] float _distanceToIncreaseTargetPoint;
 
     NavMeshPath _path;
     Vector3 _currentDestination;
     bool _isDestinationSet = false;
+    int _targetPointIndex = -1;
+    Vector3[] _currentPathPoints;
 
     //create initial path, get linerenderer.
     void Start()
@@ -57,13 +62,37 @@ public class NavigationManager : MonoBehaviour
     {
         if (_isDestinationSet)
         {
+            UpdateCurrentPoint();
+
             if (Vector3.Distance(_userIndicator.position, _currentDestination) < _distanceToEndNavigation)
             {
                 EndNavigation();
             }
+
+            UpdateOffScreenPointerVisibility();
         }
     }
 
+    private void UpdateOffScreenPointerVisibility()
+    {
+        Vector3 targetPositionScreenPoint = _arCamera.WorldToScreenPoint(_targetPointObject.transform.position);
+        bool isOffScreen = targetPositionScreenPoint.x <= 0 || targetPositionScreenPoint.x >= Screen.width ||
+            targetPositionScreenPoint.y <= 0 || targetPositionScreenPoint.y >= Screen.height;
+
+        _targetPointObject.enabled = isOffScreen;
+    }
+
+    private void UpdateCurrentPoint()
+    {
+        if (_targetPointIndex < _currentPathPoints.Length - 2)
+        {
+            if (Vector3.Distance(_userIndicator.position, _currentPathPoints[_targetPointIndex]) < _distanceToIncreaseTargetPoint)
+            {
+                _targetPointIndex++;
+                _targetPointObject.transform.position = _currentPathPoints[_targetPointIndex];
+            }
+        }
+    }
 
     /// <summary>
     /// Checks if point pressed on the screen is available as destination in the map
@@ -110,6 +139,11 @@ public class NavigationManager : MonoBehaviour
         _arLinePool.SetLinePositions(_path.corners);
         _topDownLinePool.SetLinePositions(_path.corners);
 
+        _currentPathPoints = _path.corners;
+        _targetPointIndex = 1;
+        _targetPointObject.enabled = true;
+        _targetPointObject.transform.position = _currentPathPoints[_targetPointIndex];
+
         _startPoint.SetActive(true);
         _startPoint.transform.position = originPoint;
     }
@@ -117,10 +151,17 @@ public class NavigationManager : MonoBehaviour
     public void EndNavigation()
     {
         if (!_isDestinationSet) return;
+
         _isDestinationSet = false;
+
         _poiManager.DeselectPoi();
         _topDownLinePool.HideLines();
         _arLinePool.HideLines();
+
+        _currentPathPoints = null;
+        _targetPointIndex = -1;
+        _targetPointObject.enabled = false;
+
         _startPoint.SetActive(false);
         _finishPoint.SetActive(false);
     }
