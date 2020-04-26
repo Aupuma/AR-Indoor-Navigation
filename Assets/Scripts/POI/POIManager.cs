@@ -25,6 +25,11 @@ public class POIManager : MonoBehaviour
         }
     }
 
+    public void PlayPOIReachedAnimation()
+    {
+        _selectedPoi.PlayReachedAnimations();
+    }
+
     public void DeselectPoi()
     {
         if (_selectedPoi != null)

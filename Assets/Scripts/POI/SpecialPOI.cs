@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations;
+using DG.Tweening;
 
 public class SpecialPOI : MonoBehaviour
 {
@@ -12,6 +13,10 @@ public class SpecialPOI : MonoBehaviour
     [SerializeField] Camera _arCamera;
     [SerializeField] Camera _minimapCamera;
     [SerializeField] Camera _largeMapCamera;
+
+    [SerializeField] Transform _largeMapObjectivePin;
+    [SerializeField] ParticleSystem _targetArrivedPS;
+    [SerializeField] Animator _arPinAnimator;
 
     private void Start()
     {
@@ -33,5 +38,23 @@ public class SpecialPOI : MonoBehaviour
         _minimapPinRotationConstraint.constraintActive = true;
 
         _largeMapPinZoomConstraint.ConstraintCamera = largeMapCamera;
+    }
+
+    public void PlaySetDestinationAnimation()
+    {
+        if(_largeMapObjectivePin != null)
+            _largeMapObjectivePin.DOScale(0, 0.25f).From().SetEase(Ease.OutBack);
+    }
+
+    public void PlayReachedAnimations()
+    {
+        _arPinAnimator.SetTrigger("Arrived");
+        _targetArrivedPS.Play();
+        Invoke("Deactivate", 0.75f);
+    }
+
+    private void Deactivate()
+    {
+        gameObject.SetActive(false);
     }
 }

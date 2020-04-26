@@ -36,6 +36,7 @@ public class CanvasManager : MonoBehaviour
     [SerializeField] Animator _bgFader;
     [SerializeField] Camera _arCamera;
     [SerializeField] float _angleToChangeMap;
+    [SerializeField] PanController _panController;
 
     [Header("Calibration Screen")]
     [SerializeField] CalibrationManager _calibrationManager;
@@ -102,6 +103,7 @@ public class CanvasManager : MonoBehaviour
                     _miniMap.SetActive(true);
                     _largeMap.SetActive(false);
                     _poiManager.ActivateMinimapCamera();
+                    _panController.RecenterCamera();
                     _currentState = appState;
                 }
                 break;

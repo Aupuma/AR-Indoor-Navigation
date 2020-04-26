@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ScaleWithZoomConstraint : MonoBehaviour
 {
-    float _scaleMultiplier = 0.15f;
+    [SerializeField] float _scaleMultiplier = 0.15f;
 
     [SerializeField] Camera _constraintCamera;
     public Camera ConstraintCamera { get => _constraintCamera; set => _constraintCamera = value; }

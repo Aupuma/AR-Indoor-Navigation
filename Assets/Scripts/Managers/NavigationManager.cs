@@ -22,7 +22,7 @@ public class NavigationManager : MonoBehaviour
     [SerializeField] Transform _userIndicator;
     [SerializeField] POIManager _poiManager;
     [SerializeField] GameObject _startPoint;
-    [SerializeField] GameObject _finishPoint;
+    [SerializeField] SpecialPOI _finishPoint;
 
     [Header("Map")]
     [SerializeField] Camera _topDownCamera;
@@ -55,6 +55,7 @@ public class NavigationManager : MonoBehaviour
     public void SetNavigationReady()
     {
         _userIndicator.position = new Vector3(_arCamera.transform.position.x, _userIndicator.position.y, _arCamera.transform.position.z);
+        //_userIndicator.localEulerAngles = new Vector3(0f, _arCamera.transform.eulerAngles.y, 0f);
         _navMeshSurface.BuildNavMesh();
     }
 
@@ -64,12 +65,12 @@ public class NavigationManager : MonoBehaviour
         {
             UpdateCurrentPoint();
 
+            UpdateOffScreenPointerVisibility();
+
             if (Vector3.Distance(_userIndicator.position, _currentDestination) < _distanceToEndNavigation)
             {
                 EndNavigation();
             }
-
-            UpdateOffScreenPointerVisibility();
         }
     }
 
@@ -111,8 +112,11 @@ public class NavigationManager : MonoBehaviour
             if(NavMesh.SamplePosition(hitInfo.point, out navMeshHit, 0.5f, NavMesh.AllAreas))
             {
                 _poiManager.DeselectPoi();
-                _finishPoint.SetActive(true);
+
+                _finishPoint.gameObject.SetActive(true);
+                _finishPoint.PlaySetDestinationAnimation();
                 _finishPoint.transform.position = navMeshHit.position;
+
                 SetDestination(navMeshHit.position);
             }
         }
@@ -120,7 +124,7 @@ public class NavigationManager : MonoBehaviour
 
     private void SetPoiAsDestination(Vector3 poiPosition)
     {
-        _finishPoint.SetActive(false);
+        _finishPoint.gameObject.SetActive(false);
         SetDestination(poiPosition);
     }
 
@@ -154,6 +158,15 @@ public class NavigationManager : MonoBehaviour
 
         _isDestinationSet = false;
 
+        if (_finishPoint.gameObject.activeSelf)
+        {
+            _finishPoint.PlayReachedAnimations();
+        }
+        else
+        {
+            _poiManager.PlayPOIReachedAnimation();
+        }
+
         _poiManager.DeselectPoi();
         _topDownLinePool.HideLines();
         _arLinePool.HideLines();
@@ -163,6 +176,5 @@ public class NavigationManager : MonoBehaviour
         _targetPointObject.enabled = false;
 
         _startPoint.SetActive(false);
-        _finishPoint.SetActive(false);
     }
 }

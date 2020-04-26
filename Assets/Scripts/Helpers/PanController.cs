@@ -86,6 +86,7 @@ public class PanController : MonoBehaviour
     public void RecenterCamera()
     {
         _hasMovedCamera = false;
+        DOTween.Kill(_topDownCamera.transform);
         _topDownCamera.transform.position = _topDownCameraOrigin.position;
         _topDownCamera.transform.SetParent(_topDownCameraOrigin);
         _centerCameraActiveImage.gameObject.SetActive(true);

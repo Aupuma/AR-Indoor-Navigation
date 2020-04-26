@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations;
+using DG.Tweening;
 
 public class POI : MonoBehaviour
 {
@@ -11,6 +12,9 @@ public class POI : MonoBehaviour
     [Header("AR components")]
     [SerializeField] AimConstraint _arPinAimConstraint;
     [SerializeField] MeshRenderer _arSymbol;
+    [SerializeField] MeshRenderer _arPin;
+    [SerializeField] ParticleSystem _targetArrivedPS;
+    [SerializeField] Animator _arPinAnimator;
 
     [Header("Minimap components")]
     [SerializeField] RotationConstraint _minimapPinRotationConstraint;
@@ -34,6 +38,9 @@ public class POI : MonoBehaviour
         _minimapSymbol.material.mainTexture = _pinSprite.texture;
         _largeMapSymbol.material.mainTexture = _pinSprite.texture;
 
+        _arPin.material.color = _pinColor;
+        _arPin.material.SetColor("_EmissionColor", _pinColor);
+        _arPin.material.EnableKeyword("_EMISSION");
         _minimapPin.material.color = _pinColor;
         _largeMapPin.material.color = _pinColor;
     }
@@ -63,6 +70,7 @@ public class POI : MonoBehaviour
         _minimapPin.gameObject.SetActive(false);
 
         _largeMapObjective.SetActive(true);
+        _largeMapObjective.transform.DOScale(0, 0.25f).From().SetEase(Ease.OutBack);
         _largeMapPin.gameObject.SetActive(false);
     }
 
@@ -73,5 +81,11 @@ public class POI : MonoBehaviour
 
         _largeMapObjective.SetActive(false);
         _largeMapPin.gameObject.SetActive(true);
+    }
+
+    public void PlayReachedAnimations()
+    {
+        _arPinAnimator.SetTrigger("Arrived");
+        _targetArrivedPS.Play();
     }
 }
